@@ -38,6 +38,7 @@ const CssTextField = withStyles({
 
 const App = ({isGeolocationAvailable, isGeolocationEnabled, coords }) => {
   const [width, height] = useWindowSize();
+  const [mapCenter, setMapCenter] = useState({ lat: 46.4986344, lng: 15.0653958 })
   const [locations, setLocations] = useState([]);
   const [query, setQuery] = useState("");
   const [searchList, setSearchlist] = useState([]); 
@@ -54,26 +55,26 @@ const App = ({isGeolocationAvailable, isGeolocationEnabled, coords }) => {
     setSearchTimeout(
       setTimeout(() => {
         setIsSearchLoading(true);
-        axios({
-          method: 'GET',
-          url: 'https://devru-latitude-longitude-find-v1.p.rapidapi.com/latlon.php',
-          headers: {
-            "content-type": 'application/octet-stream',  
-            "x-rapidapi-host": 'devru-latitude-longitude-find-v1.p.rapidapi.com',
-            "x-rapidapi-key": 'fqfZOwUGYBmsh8ze7Cd0V0rgjmvDp1sJVb7jsnq59Y36cKS63L'
-          },
-          params: {
-            location: query
-          }})
-          .then((res) => {console.log(res.data.Results); setSearchlist(res.data.Results)})
+          axios
+          .get('https://devru-latitude-longitude-find-v1.p.rapidapi.com/latlon.php', 
+          {
+            params: {
+              location: query
+            }, 
+            headers: {
+              "x-rapidapi-host": 'devru-latitude-longitude-find-v1.p.rapidapi.com',
+              "x-rapidapi-key": process.env.REACT_APP_RAPID_API_KEY
+            }
+          })
+          .then((res) => {setSearchlist(res.data.Results)})
           .catch((err) => console.log(err));
       }, 300)
     );
   }, [query]);
   
-  useEffect(() => {
-    setIsSearchLoading(false);
-  }, [searchList]);
+  // useEffect(() => {
+  //   setIsSearchLoading(false);
+  // }, [searchList]);
 
   const addLocation = (value) => {
     if(value.length > 0) {
@@ -97,7 +98,7 @@ const App = ({isGeolocationAvailable, isGeolocationEnabled, coords }) => {
           id='google-map'
           mapContainerStyle={{ height: height, width: width }}
           zoom={11}
-          center={{ lat: 46.4986344, lng: 15.0653958 }}
+          center={mapCenter}
         >
         </GoogleMap>
       </LoadScript>
@@ -107,7 +108,6 @@ const App = ({isGeolocationAvailable, isGeolocationEnabled, coords }) => {
             return (<LocationItem name={loc} index={key} key={key}></LocationItem>)
           })
         }
-        {/* <CssTextField id="outlined-basic" label="Add a location" variant="outlined" className="add-location-field" size="small" value={query} onChange={(e) => setQuery(e.target.value)}/> */}
         <Autocomplete
           includeInputInList
           options={searchList}
