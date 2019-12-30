@@ -19,13 +19,21 @@ $mainColorHover: #3f9642;
   border-radius: $radius;
 }
 
+@mixin no-select() {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
 .route-planner {
   position: absolute;
   bottom: 10px;
   left: 10px;
   max-width: 270px;
   width: 100%;
-  flex: 1;
   padding: 15px;
   background-color: #ffffff;
   
@@ -46,17 +54,38 @@ $mainColorHover: #3f9642;
   }
 
   .location-item {
-    display: block;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
     padding: 12px;
-    margin-bottom: 5px;
-    // border-bottom: 1px solid $mainColor;
+    margin-bottom: 10px;
     background-color: #f1f0f0;
     @include border-radius(5px);
+    @include box-shadow(0, 1px, 3px, rgba(0,0,0,0.12));
+
     span {
-      // font-size: 1.2em;
+      padding-left: 10px;
+      font-size: 1.2em;
+    }
+
+    .location-item-index {
+      padding: 5px;
+      display: flex;
+      background-color: $mainColor;
+      font-size: 1em;
+      color: #fff;
+      justify-content: center;
+      align-items: center;
       font-weight: bold;
-      display: inline;
+      @include border-radius(5px);
     }
   }
 
+  .author {
+    color: #888888;
+    font-size: .8em;
+    text-align: center;
+    margin-top: 10px;
+    @include no-select();
+  }
 }
