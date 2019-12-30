@@ -1,5 +1,5 @@
 import React, { useState, useLayoutEffect, useEffect } from 'react';
-import { makeStyles, withStyles, TextField, Button } from '@material-ui/core';
+import { makeStyles, withStyles, TextField, Button, Divider } from '@material-ui/core';
 import { GoogleMap, LoadScript } from '@react-google-maps/api' // https://github.com/JustFly1984/react-google-maps-api
 import { geolocated } from 'react-geolocated'; // https://github.com/no23reason/react-geolocated
 
@@ -45,15 +45,16 @@ const App = ({isGeolocationAvailable, isGeolocationEnabled, coords }) => {
   }, [locations]);
 
   // location item component
-  const LocationItem = ({name, key}) => <>
+  const LocationItem = ({name, index}) => <>
     <div className="location-item">
-      <p><span>{key}</span>{name}</p>
+      <span className="location-item-index">#{index + 1}</span>
+      <span>{name}</span>
     </div>
   </>
 
   return (
     <>
-      {/* <LoadScript id="script-loader" googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
+      <LoadScript id="script-loader" googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
         <GoogleMap
           id='google-map'
           mapContainerStyle={{ height: height, width: width }}
@@ -61,17 +62,19 @@ const App = ({isGeolocationAvailable, isGeolocationEnabled, coords }) => {
           center={{ lat: 46.4986344, lng: 15.0653958 }}
         >
         </GoogleMap>
-      </LoadScript> */}
+      </LoadScript>
       <div className="route-planner">
         {
           locations.map((loc, key) => {
-            return (<LocationItem name={loc} key={key}></LocationItem>)
+            return (<LocationItem name={loc} index={key} key={key}></LocationItem>)
           })
         }
         <CssTextField id="outlined-basic" label="Add a location" variant="outlined" className="add-location-field" size="small" value={query} onChange={(e) => setQuery(e.target.value)}/>
         <Button variant="contained" color="primary" className="add-location-button" onClick={() => {setLocations([...locations, query])}}>
           Add
         </Button>
+        <Divider/>
+        <p className="author">&copy; Jan Plazovnik</p>
       </div>
     </>
   )
