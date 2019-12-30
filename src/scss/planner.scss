@@ -1,3 +1,6 @@
+$mainColor: #4caf50;
+$mainColorHover: #3f9642;
+
 @mixin box-shadow($top, $left, $blur, $color, $inset: false) {
   @if $inset {
     -webkit-box-shadow:inset $top $left $blur $color;
@@ -10,21 +13,50 @@
   }
 }
 
-@mixin rounded($radius: 0.5em) {
+@mixin border-radius($radius: 0.5em) {
   -webkit-border-radius: $radius; 
   -moz-border-radius: $radius;
   border-radius: $radius;
 }
 
 .route-planner {
-  min-height: 200px;
-  max-width: 350px;
-  width: 100%;
   position: absolute;
   bottom: 10px;
   left: 10px;
+  max-width: 270px;
+  width: 100%;
+  flex: 1;
+  padding: 15px;
   background-color: #ffffff;
-  padding: 20px;
-  @include rounded(5px);
-  @include box-shadow(0, 3px, 6px, rgba(0, 0, 0, 0.161))
+  
+  transition: all .3s ease-in-out;
+  @include border-radius(5px);
+  @include box-shadow(0, 3px, 6px, rgba(0, 0, 0, 0.161));
+
+  .add-location-field,
+  .add-location-button {
+    width: 100%;
+  }
+  .add-location-button {
+    margin-top: 10px;
+    background-color: $mainColor;
+  }
+  .add-location-button:hover {
+    background-color: $mainColorHover;
+  }
+
+  .location-item {
+    display: block;
+    padding: 12px;
+    margin-bottom: 5px;
+    // border-bottom: 1px solid $mainColor;
+    background-color: #f1f0f0;
+    @include border-radius(5px);
+    span {
+      // font-size: 1.2em;
+      font-weight: bold;
+      display: inline;
+    }
+  }
+
 }

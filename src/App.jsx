@@ -1,6 +1,7 @@
-import React, { useState, useLayoutEffect } from 'react';
-import { GoogleMap, LoadScript } from '@react-google-maps/api'
-import { geolocated } from 'react-geolocated';
+import React, { useState, useLayoutEffect, useEffect } from 'react';
+import { makeStyles, withStyles, TextField, Button } from '@material-ui/core';
+import { GoogleMap, LoadScript } from '@react-google-maps/api' // https://github.com/JustFly1984/react-google-maps-api
+import { geolocated } from 'react-geolocated'; // https://github.com/no23reason/react-geolocated
 
 // style
 import './scss/planner.scss';
@@ -18,16 +19,41 @@ function useWindowSize() {
   return size;
 }
 
+const CssTextField = withStyles({
+  root: {
+    '& label.Mui-focused': {
+      color: '#4caf50',
+    },
+    '& .MuiInput-underline:after': {
+      borderBottomColor: '#4caf50',
+    },
+    '& .MuiOutlinedInput-root': {
+      '&.Mui-focused fieldset': {
+        borderColor: '#4caf50',
+      },
+    },
+  },
+})(TextField);
+
 const App = ({isGeolocationAvailable, isGeolocationEnabled, coords }) => {
   const [width, height] = useWindowSize();
+  const [locations, setLocations] = useState([]);
+  const [query, setQuery] = useState("");
 
-  // add a snackbar for the next two
-  // console.log(isGeolocationAvailable);
-  // console.log(isGeolocationEnabled);
+  useEffect(() => {
+    console.log("definitely updated locations array");
+  }, [locations]);
+
+  // location item component
+  const LocationItem = ({name, key}) => <>
+    <div className="location-item">
+      <p><span>{key}</span>{name}</p>
+    </div>
+  </>
 
   return (
     <>
-      <LoadScript id="script-loader" googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
+      {/* <LoadScript id="script-loader" googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
         <GoogleMap
           id='google-map'
           mapContainerStyle={{ height: height, width: width }}
@@ -35,8 +61,17 @@ const App = ({isGeolocationAvailable, isGeolocationEnabled, coords }) => {
           center={{ lat: 46.4986344, lng: 15.0653958 }}
         >
         </GoogleMap>
-      </LoadScript>
+      </LoadScript> */}
       <div className="route-planner">
+        {
+          locations.map((loc, key) => {
+            return (<LocationItem name={loc} key={key}></LocationItem>)
+          })
+        }
+        <CssTextField id="outlined-basic" label="Add a location" variant="outlined" className="add-location-field" size="small" value={query} onChange={(e) => setQuery(e.target.value)}/>
+        <Button variant="contained" color="primary" className="add-location-button" onClick={() => {setLocations([...locations, query])}}>
+          Add
+        </Button>
       </div>
     </>
   )
