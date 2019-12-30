@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect, useEffect } from 'react';
+import React, { useState, useLayoutEffect, useEffect, useRef } from 'react';
 import { withStyles, TextField, Button, Divider } from '@material-ui/core';
 import { GoogleMap, LoadScript } from '@react-google-maps/api' // https://github.com/JustFly1984/react-google-maps-api
 import { geolocated } from 'react-geolocated'; // https://github.com/no23reason/react-geolocated
@@ -39,6 +39,7 @@ const App = ({isGeolocationAvailable, isGeolocationEnabled, coords }) => {
   const [width, height] = useWindowSize();
   const [locations, setLocations] = useState([]);
   const [query, setQuery] = useState("");
+  const textInput = useRef(null);
 
   useEffect(() => {
     console.log("definitely updated locations array");
@@ -47,6 +48,7 @@ const App = ({isGeolocationAvailable, isGeolocationEnabled, coords }) => {
   const addLocation = (value) => {
     if(value.length > 0) {
       setLocations([...locations, value])
+      setQuery("");
     }
   }
 
