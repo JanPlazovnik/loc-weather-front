@@ -123,7 +123,7 @@ const App = ({isGeolocationAvailable, isGeolocationEnabled, coords }) => {
           Add
         </Button>
         <Button variant="contained" color="primary" className="add-location-button" onClick={() => {console.log(locations)}}>
-          Search
+          Find optimal route
         </Button>
         <Divider/>
         <p className="author">&copy; Jan Plazovnik</p>
