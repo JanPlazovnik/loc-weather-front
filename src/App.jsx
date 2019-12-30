@@ -1,8 +1,9 @@
-import React, { useState, useLayoutEffect, useEffect, useRef } from 'react';
+import React, { useState, useLayoutEffect, useEffect } from 'react';
 import { withStyles, TextField, Button, Divider } from '@material-ui/core';
+import { Autocomplete } from '@material-ui/lab';
 import { GoogleMap, LoadScript } from '@react-google-maps/api' // https://github.com/JustFly1984/react-google-maps-api
 import { geolocated } from 'react-geolocated'; // https://github.com/no23reason/react-geolocated
-
+import * as axios from 'axios';
 // style
 import './scss/planner.scss';
 
@@ -39,11 +40,40 @@ const App = ({isGeolocationAvailable, isGeolocationEnabled, coords }) => {
   const [width, height] = useWindowSize();
   const [locations, setLocations] = useState([]);
   const [query, setQuery] = useState("");
-  const textInput = useRef(null);
+  const [searchList, setSearchlist] = useState([]); 
+  const [isSearchLoading, setIsSearchLoading] = useState(false); 
+  const [searchTimeout, setSearchTimeout] = useState(0);
 
   useEffect(() => {
     console.log("definitely updated locations array");
   }, [locations]);
+
+  useEffect(() => {
+    if(query.length === 0) return;
+    if(searchTimeout) clearTimeout(searchTimeout);
+    setSearchTimeout(
+      setTimeout(() => {
+        setIsSearchLoading(true);
+        axios({
+          method: 'GET',
+          url: 'https://devru-latitude-longitude-find-v1.p.rapidapi.com/latlon.php',
+          headers: {
+            "content-type": 'application/octet-stream',  
+            "x-rapidapi-host": 'devru-latitude-longitude-find-v1.p.rapidapi.com',
+            "x-rapidapi-key": 'fqfZOwUGYBmsh8ze7Cd0V0rgjmvDp1sJVb7jsnq59Y36cKS63L'
+          },
+          params: {
+            location: query
+          }})
+          .then((res) => {console.log(res.data.Results); setSearchlist(res.data.Results)})
+          .catch((err) => console.log(err));
+      }, 300)
+    );
+  }, [query]);
+  
+  useEffect(() => {
+    setIsSearchLoading(false);
+  }, [searchList]);
 
   const addLocation = (value) => {
     if(value.length > 0) {
@@ -77,9 +107,23 @@ const App = ({isGeolocationAvailable, isGeolocationEnabled, coords }) => {
             return (<LocationItem name={loc} index={key} key={key}></LocationItem>)
           })
         }
-        <CssTextField id="outlined-basic" label="Add a location" variant="outlined" className="add-location-field" size="small" value={query} onChange={(e) => setQuery(e.target.value)}/>
+        {/* <CssTextField id="outlined-basic" label="Add a location" variant="outlined" className="add-location-field" size="small" value={query} onChange={(e) => setQuery(e.target.value)}/> */}
+        <Autocomplete
+          includeInputInList
+          options={searchList}
+          getOptionLabel={option => `${option.name}`}
+          loading={isSearchLoading}
+          loadingText="Searching..."
+          renderInput={params => {
+            setQuery(params.inputProps.value);
+            return (<CssTextField {...params} label="Add a location" variant="outlined" size="small" fullWidth/>)
+          }}
+        />
         <Button variant="contained" color="primary" className="add-location-button" onClick={() => {addLocation(query)}}>
           Add
+        </Button>
+        <Button variant="contained" color="primary" className="add-location-button" onClick={() => {console.log(locations)}}>
+          Search
         </Button>
         <Divider/>
         <p className="author">&copy; Jan Plazovnik</p>
