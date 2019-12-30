@@ -1,5 +1,5 @@
 import React, { useState, useLayoutEffect, useEffect } from 'react';
-import { makeStyles, withStyles, TextField, Button, Divider } from '@material-ui/core';
+import { withStyles, TextField, Button, Divider } from '@material-ui/core';
 import { GoogleMap, LoadScript } from '@react-google-maps/api' // https://github.com/JustFly1984/react-google-maps-api
 import { geolocated } from 'react-geolocated'; // https://github.com/no23reason/react-geolocated
 
@@ -44,6 +44,12 @@ const App = ({isGeolocationAvailable, isGeolocationEnabled, coords }) => {
     console.log("definitely updated locations array");
   }, [locations]);
 
+  const addLocation = (value) => {
+    if(value.length > 0) {
+      setLocations([...locations, value])
+    }
+  }
+
   // location item component
   const LocationItem = ({name, index}) => <>
     <div className="location-item">
@@ -70,7 +76,7 @@ const App = ({isGeolocationAvailable, isGeolocationEnabled, coords }) => {
           })
         }
         <CssTextField id="outlined-basic" label="Add a location" variant="outlined" className="add-location-field" size="small" value={query} onChange={(e) => setQuery(e.target.value)}/>
-        <Button variant="contained" color="primary" className="add-location-button" onClick={() => {setLocations([...locations, query])}}>
+        <Button variant="contained" color="primary" className="add-location-button" onClick={() => {addLocation(query)}}>
           Add
         </Button>
         <Divider/>
