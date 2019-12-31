@@ -2,7 +2,7 @@ import React, { useState, useLayoutEffect, useEffect } from 'react';
 import { withStyles, TextField, Button, Divider } from '@material-ui/core';
 import { Autocomplete } from '@material-ui/lab';
 import { SnackbarProvider, useSnackbar } from 'notistack';
-import { InfoWindow, GoogleMap, LoadScript } from '@react-google-maps/api' // https://github.com/JustFly1984/react-google-maps-api
+import { GoogleMap, LoadScript, InfoWindow, Circle } from '@react-google-maps/api' // https://github.com/JustFly1984/react-google-maps-api
 import {SortableContainer, SortableElement} from 'react-sortable-hoc';
 import arrayMove from 'array-move';
 import * as axios from 'axios';
@@ -38,6 +38,11 @@ const CssTextField = withStyles({
   },
 })(TextField);
 
+// genius ikr
+Array.prototype.last = function() {
+  return this[this.length - 1];
+}
+
 const MainComponent = () => {
   const [width, height] = useWindowSize();
   const [mapCenter, setMapCenter] = useState({ lat: 46.4986344, lng: 15.0653958 })
@@ -48,10 +53,6 @@ const MainComponent = () => {
   const [searchTimeout, setSearchTimeout] = useState(0);
   const [returnedRoute, setReturnedRoute] = useState([]);
   const { enqueueSnackbar } = useSnackbar();
-
-  useEffect(() => {
-    console.log("definitely updated locations array");
-  }, [locations]);
 
   useEffect(() => {
     if(query.length === 0) return;
@@ -82,6 +83,8 @@ const MainComponent = () => {
 
   const addLocation = (value) => {
     if(value.length > 0) {
+      if(locations.last() == value)
+        return enqueueSnackbar("New location can't be the same as last location", {variant: 'error', autoHideDuration: 3000, anchorOrigin: {vertical: 'bottom', horizontal: 'center'}});
       setLocations([...locations, value])
       setQuery("");
     }
@@ -105,15 +108,13 @@ const MainComponent = () => {
   });
 
   const onSortEnd = ({oldIndex, newIndex}) => {
-    console.log(oldIndex, newIndex);
     setLocations(arrayMove(locations, oldIndex, newIndex));
   };
 
   const fetchRoutes = (locations) => {
-    console.log(process.env.REACT_APP_LOCATIONS_API_URI);
     axios
       .post(process.env.REACT_APP_LOCATIONS_API_URI, {locations})
-      .then((res) => {console.log(res.data); setReturnedRoute(res.data)})
+      .then((res) => {setReturnedRoute(res.data)})
       .catch((err) => {console.log(err); enqueueSnackbar(err.response.data, {variant: 'error', autoHideDuration: 3000, anchorOrigin: {vertical: 'bottom', horizontal: 'center'}})});
   }
 
@@ -130,16 +131,34 @@ const MainComponent = () => {
             (returnedRoute.length > 0)
             ? returnedRoute.map((marker, key) => {
               // return (<Marker position={{lat: marker.lat, lng: marker.lon}} key={key}/>)
-              return (<InfoWindow position={{lat: marker.lat, lng: marker.lon}} key={key}>
-                <div style={{
-                  background: 'white',
-                  fontSize: '1em'
-                }}>
-                <h1>{marker.weather.type}</h1>
-                <h1>{marker.weather.temp} °C</h1>
-                <p style={{fontSize: '0.8em', textAlign: 'center'}}>{key + 1}</p>
-                </div>
-              </InfoWindow>)
+              return (<>
+                <InfoWindow position={{lat: marker.lat, lng: marker.lon}} key={"infowindow-" + key}>
+                  <div style={{
+                    background: 'white',
+                    fontSize: '1em'
+                  }}>
+                  <h1>{marker.weather.type}</h1>
+                  <h1>{marker.weather.temp} °C</h1>
+                  <p style={{fontSize: '0.8em', textAlign: 'center'}}>{key + 1}</p>
+                  </div>
+                </InfoWindow>
+                <Circle center={{lat: marker.lat, lng: marker.lon}} key={"circle-" + key} options={
+                  {
+                    strokeColor: '#FF0000',
+                    strokeOpacity: 0.6,
+                    strokeWeight: 2,
+                    fillColor: '#FF0000',
+                    fillOpacity: 0.35,
+                    clickable: false,
+                    draggable: false,
+                    editable: false,
+                    visible: true,
+                    radius: 1000,
+                    zIndex: 1}
+                  }
+                />
+              </>
+              )
             })
             : null
           }
