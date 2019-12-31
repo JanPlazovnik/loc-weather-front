@@ -81,6 +81,11 @@ const MainComponent = () => {
     setIsSearchLoading(false);
   }, [searchList]);
 
+  const reset = () => {
+    setLocations([]);
+    setReturnedRoute([]);
+  }
+
   const addLocation = (value) => {
     if(value.length > 0) {
       if(locations.last() == value)
@@ -184,6 +189,9 @@ const MainComponent = () => {
         />
         <Button variant="contained" color="primary" className="add-location-button" onClick={() => {addLocation(query)}}>
           Add
+        </Button>
+        <Button variant="contained" color="primary" className="add-location-button" onClick={() => {reset()}}>
+          Reset
         </Button>
         <Button variant="contained" color="primary" className="add-location-button" onClick={() => {fetchRoutes(locations)}}>
           Find optimal route
