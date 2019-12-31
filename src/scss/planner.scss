@@ -53,40 +53,43 @@ $mainColorHover: #3f9642;
     background-color: $mainColorHover;
   }
 
-  .location-item {
-    display: flex;
-    align-items: center;
-    flex-direction: row;
-    padding: 12px;
-    margin-bottom: 12px;
-    background-color: #f1f0f0;
-    @include border-radius(5px);
-    @include box-shadow(0, 1px, 3px, rgba(0,0,0,0.12));
-
-    span {
-      padding-left: 10px;
-      font-size: 1.2em;
-    }
-
-    .location-item-index {
-      padding: 5px;
-      display: flex;
-      background-color: $mainColor;
-      font-size: .9em;
-      color: #fff;
-      justify-content: center;
-      align-items: center;
-      font-weight: bold;
-      @include border-radius(5px);
-      @include box-shadow(0, 8px, 15px, rgba(0,0,0,0.1));
-    }
-  }
-
   .author {
     color: #888888;
     font-size: .8em;
     text-align: center;
     margin-top: 10px;
     @include no-select();
+  }
+}
+
+// moved it outside because it can't rely on parent when being dragged
+.location-item {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  padding: 12px;
+  margin-bottom: 12px;
+  background-color: #f1f0f0;
+  cursor: pointer;
+  @include border-radius(5px);
+  @include box-shadow(0, 1px, 3px, rgba(0,0,0,0.12));
+  @include no-select();
+  
+  span {
+    padding-left: 10px;
+    font-size: 1.2em;
+  }
+
+  .location-item-index {
+    padding: 5px;
+    display: flex;
+    background-color: $mainColor;
+    font-size: .9em;
+    color: #fff;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    @include border-radius(5px);
+    @include box-shadow(0, 8px, 15px, rgba(0,0,0,0.1));
   }
 }
