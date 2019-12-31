@@ -1,8 +1,10 @@
 import React, { useState, useLayoutEffect, useEffect } from 'react';
 import { withStyles, TextField, Button, Divider } from '@material-ui/core';
 import { Autocomplete } from '@material-ui/lab';
+import { SnackbarProvider, useSnackbar } from 'notistack';
 import { InfoWindow, GoogleMap, LoadScript } from '@react-google-maps/api' // https://github.com/JustFly1984/react-google-maps-api
-import { geolocated } from 'react-geolocated'; // https://github.com/no23reason/react-geolocated
+import {SortableContainer, SortableElement} from 'react-sortable-hoc';
+import arrayMove from 'array-move';
 import * as axios from 'axios';
 // style
 import './scss/planner.scss';
@@ -36,7 +38,7 @@ const CssTextField = withStyles({
   },
 })(TextField);
 
-const App = ({isGeolocationAvailable, isGeolocationEnabled, coords }) => {
+const MainComponent = () => {
   const [width, height] = useWindowSize();
   const [mapCenter, setMapCenter] = useState({ lat: 46.4986344, lng: 15.0653958 })
   const [locations, setLocations] = useState([]);
@@ -45,6 +47,7 @@ const App = ({isGeolocationAvailable, isGeolocationEnabled, coords }) => {
   const [isSearchLoading, setIsSearchLoading] = useState(false); 
   const [searchTimeout, setSearchTimeout] = useState(0);
   const [returnedRoute, setReturnedRoute] = useState([]);
+  const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
     console.log("definitely updated locations array");
@@ -68,7 +71,7 @@ const App = ({isGeolocationAvailable, isGeolocationEnabled, coords }) => {
             }
           })
           .then((res) => {setSearchlist(res.data.Results)})
-          .catch((err) => console.log(err));
+          .catch((err) => {console.log(err); enqueueSnackbar(err.response.data, {variant: 'error', autoHideDuration: 3000, anchorOrigin: {vertical: 'bottom', horizontal: 'center'}})});
       }, 300)
     );
   }, [query]);
@@ -84,21 +87,35 @@ const App = ({isGeolocationAvailable, isGeolocationEnabled, coords }) => {
     }
   }
 
+  const SortableItem = SortableElement(({value}) => <>
+    <div className="location-item">
+      <span className="location-item-index">#{value[1] + 1}</span>
+      <span>{value[0]}</span>
+    </div>
+  </>);
+
+  const SortableList = SortableContainer(({items}) => {
+    return (
+      <ul>
+        {items.map((value, index) => (
+          <SortableItem key={`item-${index}`} index={index} value={[value, index]} />
+        ))}
+      </ul>
+    );
+  });
+
+  const onSortEnd = ({oldIndex, newIndex}) => {
+    console.log(oldIndex, newIndex);
+    setLocations(arrayMove(locations, oldIndex, newIndex));
+  };
+
   const fetchRoutes = (locations) => {
     console.log(process.env.REACT_APP_LOCATIONS_API_URI);
     axios
       .post(process.env.REACT_APP_LOCATIONS_API_URI, {locations})
       .then((res) => {console.log(res.data); setReturnedRoute(res.data)})
-      .catch((err) => console.log(err));
+      .catch((err) => {console.log(err); enqueueSnackbar(err.response.data, {variant: 'error', autoHideDuration: 3000, anchorOrigin: {vertical: 'bottom', horizontal: 'center'}})});
   }
-
-  // location item component
-  const LocationItem = ({name, index}) => <>
-    <div className="location-item">
-      <span className="location-item-index">#{index + 1}</span>
-      <span>{name}</span>
-    </div>
-  </>
 
   return (
     <>
@@ -116,11 +133,11 @@ const App = ({isGeolocationAvailable, isGeolocationEnabled, coords }) => {
               return (<InfoWindow position={{lat: marker.lat, lng: marker.lon}} key={key}>
                 <div style={{
                   background: 'white',
-                  fontSize: '0.9em',
-                  borderBottom: '1px solid black'
+                  fontSize: '1em'
                 }}>
                 <h1>{marker.weather.type}</h1>
                 <h1>{marker.weather.temp} °C</h1>
+                <p style={{fontSize: '0.8em', textAlign: 'center'}}>{key + 1}</p>
                 </div>
               </InfoWindow>)
             })
@@ -129,11 +146,12 @@ const App = ({isGeolocationAvailable, isGeolocationEnabled, coords }) => {
         </GoogleMap>
       </LoadScript>
       <div className="route-planner">
-        {
+        {/* {
           locations.map((loc, key) => {
             return (<LocationItem name={loc} index={key} key={key}></LocationItem>)
           })
-        }
+        } */}
+        <SortableList items={locations} onSortEnd={onSortEnd} helperClass="location-item"/>
         <Autocomplete
           includeInputInList
           options={searchList}
@@ -158,9 +176,15 @@ const App = ({isGeolocationAvailable, isGeolocationEnabled, coords }) => {
   )
 }
 
-export default geolocated({
-  positionOptions: {
-      enableHighAccuracy: false,
-  },
-  userDecisionTimeout: 5000,
-})(App);
+// have to separate them or snackbarprovider won't work
+export default function App() {
+  const notistackRef = React.createRef();
+  const onClickDismiss = key => () => { 
+      notistackRef.current.closeSnackbar(key);
+  }
+  return (
+    <SnackbarProvider maxSnack={3} ref={notistackRef} action={(key) => (<Button style={{color: '#ffffff'}}onClick={onClickDismiss(key)}>Dismiss</Button>)}>
+      <MainComponent />
+    </SnackbarProvider> 
+  )
+};
