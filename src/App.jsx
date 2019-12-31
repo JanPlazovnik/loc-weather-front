@@ -1,7 +1,7 @@
 import React, { useState, useLayoutEffect, useEffect } from 'react';
 import { withStyles, TextField, Button, Divider } from '@material-ui/core';
 import { Autocomplete } from '@material-ui/lab';
-import { GoogleMap, LoadScript } from '@react-google-maps/api' // https://github.com/JustFly1984/react-google-maps-api
+import { InfoWindow, GoogleMap, LoadScript } from '@react-google-maps/api' // https://github.com/JustFly1984/react-google-maps-api
 import { geolocated } from 'react-geolocated'; // https://github.com/no23reason/react-geolocated
 import * as axios from 'axios';
 // style
@@ -44,6 +44,7 @@ const App = ({isGeolocationAvailable, isGeolocationEnabled, coords }) => {
   const [searchList, setSearchlist] = useState([]); 
   const [isSearchLoading, setIsSearchLoading] = useState(false); 
   const [searchTimeout, setSearchTimeout] = useState(0);
+  const [returnedRoute, setReturnedRoute] = useState([]);
 
   useEffect(() => {
     console.log("definitely updated locations array");
@@ -72,15 +73,23 @@ const App = ({isGeolocationAvailable, isGeolocationEnabled, coords }) => {
     );
   }, [query]);
   
-  // useEffect(() => {
-  //   setIsSearchLoading(false);
-  // }, [searchList]);
+  useEffect(() => {
+    setIsSearchLoading(false);
+  }, [searchList]);
 
   const addLocation = (value) => {
     if(value.length > 0) {
       setLocations([...locations, value])
       setQuery("");
     }
+  }
+
+  const fetchRoutes = (locations) => {
+    console.log(process.env.REACT_APP_LOCATIONS_API_URI);
+    axios
+      .post(process.env.REACT_APP_LOCATIONS_API_URI, {locations})
+      .then((res) => {console.log(res.data); setReturnedRoute(res.data)})
+      .catch((err) => console.log(err));
   }
 
   // location item component
@@ -100,6 +109,23 @@ const App = ({isGeolocationAvailable, isGeolocationEnabled, coords }) => {
           zoom={11}
           center={mapCenter}
         >
+          {
+            (returnedRoute.length > 0)
+            ? returnedRoute.map((marker, key) => {
+              // return (<Marker position={{lat: marker.lat, lng: marker.lon}} key={key}/>)
+              return (<InfoWindow position={{lat: marker.lat, lng: marker.lon}} key={key}>
+                <div style={{
+                  background: 'white',
+                  fontSize: '0.9em',
+                  borderBottom: '1px solid black'
+                }}>
+                <h1>{marker.weather.type}</h1>
+                <h1>{marker.weather.temp} °C</h1>
+                </div>
+              </InfoWindow>)
+            })
+            : null
+          }
         </GoogleMap>
       </LoadScript>
       <div className="route-planner">
@@ -122,7 +148,7 @@ const App = ({isGeolocationAvailable, isGeolocationEnabled, coords }) => {
         <Button variant="contained" color="primary" className="add-location-button" onClick={() => {addLocation(query)}}>
           Add
         </Button>
-        <Button variant="contained" color="primary" className="add-location-button" onClick={() => {console.log(locations)}}>
+        <Button variant="contained" color="primary" className="add-location-button" onClick={() => {fetchRoutes(locations)}}>
           Find optimal route
         </Button>
         <Divider/>
