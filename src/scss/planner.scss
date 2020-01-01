@@ -32,7 +32,9 @@ $mainColorHover: #3f9642;
   position: absolute;
   bottom: 10px;
   left: 10px;
-  max-width: 270px;
+  max-width: 300px;
+  max-height: 900px;
+  overflow-y: auto;
   width: 100%;
   padding: 15px;
   background-color: #ffffff;
@@ -41,15 +43,11 @@ $mainColorHover: #3f9642;
   @include border-radius(5px);
   @include box-shadow(0, 3px, 6px, rgba(0, 0, 0, 0.161));
 
-  .add-location-field,
-  .add-location-button {
-    width: 100%;
-  }
-  .add-location-button {
+  .btn {
     margin-top: 10px;
     background-color: $mainColor;
   }
-  .add-location-button:hover {
+  .btn:hover {
     background-color: $mainColorHover;
   }
 
