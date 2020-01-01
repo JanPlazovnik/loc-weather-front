@@ -1,5 +1,5 @@
 import React, { useState, useLayoutEffect, useEffect } from 'react';
-import { withStyles, TextField, Button, Divider } from '@material-ui/core';
+import { withStyles, makeStyles, TextField, Button, Divider, InputLabel, MenuItem, FormControl, Select } from '@material-ui/core';
 import { Autocomplete } from '@material-ui/lab';
 import { SnackbarProvider, useSnackbar } from 'notistack';
 import { GoogleMap, LoadScript, InfoWindow, Circle } from '@react-google-maps/api' // https://github.com/JustFly1984/react-google-maps-api
@@ -38,21 +38,35 @@ const CssTextField = withStyles({
   },
 })(TextField);
 
-// genius ikr
+const useStyles = makeStyles(theme => ({
+  formControl: {
+    marginTop: theme.spacing(1.5),
+    width: '100%',
+  }
+}));
+
 Array.prototype.last = function() {
   return this[this.length - 1];
 }
 
 const MainComponent = () => {
   const [width, height] = useWindowSize();
-  const [mapCenter, setMapCenter] = useState({ lat: 46.4986344, lng: 15.0653958 })
+  const [mapCenter, setMapCenter] = useState({ lat: 46.056946, lng: 14.505751 })
   const [locations, setLocations] = useState([]);
   const [query, setQuery] = useState("");
   const [searchList, setSearchlist] = useState([]); 
   const [isSearchLoading, setIsSearchLoading] = useState(false); 
   const [searchTimeout, setSearchTimeout] = useState(0);
   const [returnedRoute, setReturnedRoute] = useState([]);
+  const [deleteLocation, setDeleteLocation] = useState('');
+  const [labelWidth, setLabelWidth] = useState(0);
   const { enqueueSnackbar } = useSnackbar();
+  const classes = useStyles();
+  const inputLabel = React.useRef(null);
+
+  useEffect(() => {
+    setLabelWidth(inputLabel.current.offsetWidth);
+  }, []);
 
   useEffect(() => {
     if(query.length === 0) return;
@@ -81,14 +95,26 @@ const MainComponent = () => {
     setIsSearchLoading(false);
   }, [searchList]);
 
-  const reset = () => {
-    setLocations([]);
+  const handleDeleteChange = (event) => {
+    setDeleteLocation(event.target.value);
+  };
+
+  const removeLocation = () => {
+    if(deleteLocation == "all")
+      setLocations([]);
+    else {
+      let arr = locations;
+      let index = arr.indexOf(deleteLocation);
+      arr.splice(index, 1)
+      setLocations(arr);
+    }
+    setDeleteLocation('');
     setReturnedRoute([]);
   }
 
   const addLocation = (value) => {
     if(value.length > 0) {
-      if(locations.last() == value)
+      if(locations.last() === value)
         return enqueueSnackbar("New location can't be the same as last location", {variant: 'error', autoHideDuration: 3000, anchorOrigin: {vertical: 'bottom', horizontal: 'center'}});
       setLocations([...locations, value])
       setQuery("");
@@ -119,7 +145,7 @@ const MainComponent = () => {
   const fetchRoutes = (locations) => {
     axios
       .post(process.env.REACT_APP_LOCATIONS_API_URI, {locations})
-      .then((res) => {setReturnedRoute(res.data)})
+      .then((res) => {setReturnedRoute(res.data); setMapCenter({lat: res.data[Math.round(res.data.length / 2)].lat, lng: res.data[Math.round(res.data.length / 2)].lon})})
       .catch((err) => {console.log(err); enqueueSnackbar(err.response.data, {variant: 'error', autoHideDuration: 3000, anchorOrigin: {vertical: 'bottom', horizontal: 'center'}})});
   }
 
@@ -132,49 +158,42 @@ const MainComponent = () => {
           zoom={11}
           center={mapCenter}
         >
-          {
-            (returnedRoute.length > 0)
-            ? returnedRoute.map((marker, key) => {
-              // return (<Marker position={{lat: marker.lat, lng: marker.lon}} key={key}/>)
-              return (<>
-                <InfoWindow position={{lat: marker.lat, lng: marker.lon}} key={"infowindow-" + key}>
-                  <div style={{
-                    background: 'white',
-                    fontSize: '1em'
-                  }}>
-                  <h1>{marker.weather.type}</h1>
-                  <h1>{marker.weather.temp} °C</h1>
-                  <p style={{fontSize: '0.8em', textAlign: 'center'}}>{key + 1}</p>
-                  </div>
-                </InfoWindow>
-                <Circle center={{lat: marker.lat, lng: marker.lon}} key={"circle-" + key} options={
-                  {
-                    strokeColor: '#FF0000',
-                    strokeOpacity: 0.6,
-                    strokeWeight: 2,
-                    fillColor: '#FF0000',
-                    fillOpacity: 0.35,
-                    clickable: false,
-                    draggable: false,
-                    editable: false,
-                    visible: true,
-                    radius: 1000,
-                    zIndex: 1}
-                  }
-                />
-              </>
-              )
-            })
-            : null
-          }
+        {
+          returnedRoute.map((marker, key) => {
+            // return (<Marker position={{lat: marker.lat, lng: marker.lon}} key={key}/>)
+            return (<>
+              <InfoWindow position={{lat: marker.lat, lng: marker.lon}} key={"infowindow-" + key}>
+                <div style={{
+                  background: 'white',
+                  fontSize: '1em'
+                }}>
+                <h1>{marker.weather.type}</h1>
+                <h1>{marker.weather.temp} °C</h1>
+                <p style={{fontSize: '0.8em', textAlign: 'center'}}>{key + 1}</p>
+                </div>
+              </InfoWindow>
+              <Circle center={{lat: marker.lat, lng: marker.lon}} key={"circle-" + key} options={
+                {
+                  strokeColor: '#FF0000',
+                  strokeOpacity: 0.6,
+                  strokeWeight: 2,
+                  fillColor: '#FF0000',
+                  fillOpacity: 0.35,
+                  clickable: false,
+                  draggable: false,
+                  editable: false,
+                  visible: true,
+                  radius: 1000,
+                  zIndex: 1}
+                }
+              />
+            </>
+            )
+          })
+        }
         </GoogleMap>
       </LoadScript>
       <div className="route-planner">
-        {/* {
-          locations.map((loc, key) => {
-            return (<LocationItem name={loc} index={key} key={key}></LocationItem>)
-          })
-        } */}
         <SortableList items={locations} onSortEnd={onSortEnd} helperClass="location-item"/>
         <Autocomplete
           includeInputInList
@@ -187,13 +206,38 @@ const MainComponent = () => {
             return (<CssTextField {...params} label="Add a location" variant="outlined" size="small" fullWidth/>)
           }}
         />
-        <Button variant="contained" color="primary" className="add-location-button" onClick={() => {addLocation(query)}}>
+        <Button variant="contained" color="primary" className="btn" fullWidth onClick={() => {addLocation(query)}}>
           Add
         </Button>
-        <Button variant="contained" color="primary" className="add-location-button" onClick={() => {reset()}}>
-          Reset
+        <FormControl variant="outlined" size="small" className={classes.formControl}>
+          <InputLabel ref={inputLabel} id="remove-location-label">
+            Remove a location
+          </InputLabel>
+          <Select
+            labelId="remove-location-label"
+            id="remove-location"
+            value={deleteLocation}
+            onChange={handleDeleteChange}
+            labelWidth={labelWidth}
+            // can't get custom styling for this to work, so it's just gonna stay blue.
+          >
+            <MenuItem value="">
+              <em>None</em>
+            </MenuItem>
+            <MenuItem value="all">
+              <em>All</em>
+            </MenuItem>
+            {
+              locations.map((loc, key) => {
+                return <MenuItem value={loc} key={key}>{loc}</MenuItem>
+              })
+            }
+          </Select>
+        </FormControl>
+        <Button variant="contained" color="primary" className="btn" fullWidth onClick={() => {removeLocation()}}>
+          Remove
         </Button>
-        <Button variant="contained" color="primary" className="add-location-button" onClick={() => {fetchRoutes(locations)}}>
+        <Button variant="contained" color="primary" className="btn" fullWidth onClick={() => {fetchRoutes(locations)}}>
           Find optimal route
         </Button>
         <Divider/>
