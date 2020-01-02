@@ -52,6 +52,7 @@ Array.prototype.last = function() {
 const MainComponent = () => {
   const [width, height] = useWindowSize();
   const [mapCenter, setMapCenter] = useState({ lat: 46.056946, lng: 14.505751 })
+  // const [locations, setLocations] = useState([]);
   const [locations, setLocations] = useState([]);
   const [query, setQuery] = useState("");
   const [searchList, setSearchlist] = useState([]); 
@@ -100,7 +101,7 @@ const MainComponent = () => {
   };
 
   const removeLocation = () => {
-    if(deleteLocation == "all")
+    if(deleteLocation === "all")
       setLocations([]);
     else {
       let arr = locations;
@@ -146,7 +147,13 @@ const MainComponent = () => {
     axios
       .post(process.env.REACT_APP_LOCATIONS_API_URI, {locations})
       .then((res) => {setReturnedRoute(res.data); setMapCenter({lat: res.data[Math.round(res.data.length / 2)].lat, lng: res.data[Math.round(res.data.length / 2)].lon})})
-      .catch((err) => {console.log(err); enqueueSnackbar(err.response.data, {variant: 'error', autoHideDuration: 3000, anchorOrigin: {vertical: 'bottom', horizontal: 'center'}})});
+      .catch((err) => {
+        console.log(err);
+        if(err.response && Object.entries(err.response.data).length === 0 && err.response.data.constructor === Object)
+          enqueueSnackbar("Couldn't find a route", {variant: 'error', autoHideDuration: 3000, anchorOrigin: {vertical: 'bottom', horizontal: 'center'}});
+        else
+          enqueueSnackbar(err.response.data, {variant: 'error', autoHideDuration: 3000, anchorOrigin: {vertical: 'bottom', horizontal: 'center'}});
+      });
   }
 
   return (
@@ -229,7 +236,7 @@ const MainComponent = () => {
             </MenuItem>
             {
               locations.map((loc, key) => {
-                return <MenuItem value={loc} key={key}>{loc}</MenuItem>
+                return <MenuItem value={loc} key={"delete" + key}>{loc}</MenuItem>
               })
             }
           </Select>
