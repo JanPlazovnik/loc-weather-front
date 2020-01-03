@@ -68,6 +68,7 @@ $mainColorHover: #3f9642;
   padding: 12px;
   margin-bottom: 12px;
   background-color: #f1f0f0;
+  transition: background-color .18s ease-in-out;
   cursor: pointer;
   @include border-radius(5px);
   @include box-shadow(0, 1px, 3px, rgba(0,0,0,0.12));
@@ -76,6 +77,10 @@ $mainColorHover: #3f9642;
   span {
     padding-left: 10px;
     font-size: 1.2em;
+  }
+
+  &:hover {
+    background-color: #ebebeb;
   }
 
   .location-item-index {
