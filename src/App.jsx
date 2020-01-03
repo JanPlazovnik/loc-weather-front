@@ -149,10 +149,14 @@ const MainComponent = () => {
       .then((res) => {setReturnedRoute(res.data); setMapCenter({lat: res.data[Math.round(res.data.length / 2)].lat, lng: res.data[Math.round(res.data.length / 2)].lon})})
       .catch((err) => {
         console.log(err);
-        if(err.response && Object.entries(err.response.data).length === 0 && err.response.data.constructor === Object)
-          enqueueSnackbar("Couldn't find a route", {variant: 'error', autoHideDuration: 3000, anchorOrigin: {vertical: 'bottom', horizontal: 'center'}});
-        else
-          enqueueSnackbar(err.response.data, {variant: 'error', autoHideDuration: 3000, anchorOrigin: {vertical: 'bottom', horizontal: 'center'}});
+        if(err.response) {
+          if(Object.entries(err.response.data).length === 0 && err.response.data.constructor === Object)
+            enqueueSnackbar("Couldn't find a route", {variant: 'error', autoHideDuration: 3000, anchorOrigin: {vertical: 'bottom', horizontal: 'center'}});
+          else
+            enqueueSnackbar(err.response.data, {variant: 'error', autoHideDuration: 3000, anchorOrigin: {vertical: 'bottom', horizontal: 'center'}});
+        } else {
+          enqueueSnackbar("Unknown error with API", {variant: 'error', autoHideDuration: 3000, anchorOrigin: {vertical: 'bottom', horizontal: 'center'}});
+        }
       });
   }
 
